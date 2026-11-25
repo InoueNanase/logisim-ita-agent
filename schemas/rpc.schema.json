@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Logisim-ITA JSON-RPC 2.0 message",
+  "oneOf": [
+    {"$ref": "#/$defs/request"},
+    {"$ref": "#/$defs/response"},
+    {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/request"}},
+    {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/response"}}
+  ],
+  "$defs": {
+    "id": {"type": ["string", "number", "null"]},
+    "value": {"anyOf": [
+      {"type": "integer", "minimum": 0, "maximum": 4294967295},
+      {"type": "string", "pattern": "^(0[bB])?[01xXeE ]{1,40}$"}
+    ]},
+    "point": {
+      "type": "object", "required": ["x", "y"],
+      "properties": {"x": {"type": "integer", "minimum": -1000000, "maximum": 1000000},
+                     "y": {"type": "integer", "minimum": -1000000, "maximum": 1000000}}
+    },
+    "project": {
+      "type": "object",
+      "anyOf": [{"required": ["project_id"]}, {"required": ["project"]}]
+    },
+    "vector": {
+      "type": "object",
+      "properties": {
+        "label": {"type": "string"}, "clock_id": {"type": "string"},
+        "edges": {"type": "integer", "minimum": 0, "maximum": 1000},
+        "reset": {"type": "boolean"},
+        "inputs": {"type": "object", "additionalProperties": {"$ref": "#/$defs/value"}},
+        "expect": {"type": "object", "additionalProperties": {"$ref": "#/$defs/value"}}
+      }
+    },
+    "vectors": {"type": "array", "minItems": 1, "maxItems": 256, "items": {"$ref": "#/$defs/vector"}},
+    "params": {
+      "type": "object",
+      "properties": {
+        "project_id": {"type": "string"}, "project": {"type": "string"}, "path": {"type": "string", "minLength": 1},
+        "circuit": {"type": "string"}, "name": {"type": "string"}, "top_circuit": {"type": "string"},
+        "mode": {"enum": ["read_write", "read_only"]}, "reopen": {"type": "boolean"}, "discard": {"type": "boolean"},
+        "id": {"type": "string"}, "factory": {"type": "string"}, "category": {"type": "string"},
+        "attrs": {"type": "object", "additionalProperties": {"type": ["string", "number", "boolean"]}},
+        "attribute": {"type": "string"}, "value": {"type": ["string", "number", "boolean"]},
+        "label": {"type": "string"}, "facing": {"type": "string"}, "position": {"$ref": "#/$defs/point"},
+        "x": {"type": "integer", "minimum": -1000000, "maximum": 1000000},
+        "y": {"type": "integer", "minimum": -1000000, "maximum": 1000000},
+        "reroute": {"enum": ["preserve", "detach"]}, "cascade": {"type": "boolean"},
+        "wire_or_net_id": {"type": "string"}, "allow_dangling": {"type": "boolean"},
+        "points": {"type": "array", "minItems": 2, "maxItems": 128, "items": {"$ref": "#/$defs/point"}},
+        "width": {"type": "integer", "minimum": 1, "maximum": 32},
+        "if_revision": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+        "settle": {"type": "boolean"}, "pin_id": {"type": "string"}, "clock_id": {"type": "string"},
+        "edges": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "vectors": {"$ref": "#/$defs/vectors"}, "states": {"$ref": "#/$defs/vectors"},
+        "independent": {"type": "boolean"}, "labels": {"type": "boolean"}, "layout": {"enum": ["grid", "list"]},
+        "format": {"const": "png"}, "fit": {"const": "content"}, "scale": {"type": "number", "minimum": 0.25, "maximum": 16},
+        "background": {"type": "string", "pattern": "^(white|transparent|#[0-9a-fA-F]{6})$"},
+        "padding": {"type": "integer", "minimum": 0, "maximum": 256},
+        "dpi": {"type": "integer", "minimum": 72, "maximum": 1200},
+        "show_grid": {"type": "boolean"}, "include_state": {"type": "boolean"}
+      }
+    },
+    "request": {
+      "type": "object", "required": ["jsonrpc", "method"],
+      "properties": {
+        "jsonrpc": {"const": "2.0"}, "id": {"$ref": "#/$defs/id"},
+        "method": {"enum": [
+          "logisim.get_capabilities", "logisim.open_project", "logisim.create_project", "logisim.close_project",
+          "logisim.list_circuits", "logisim.create_circuit", "logisim.get_circuit", "logisim.save", "logisim.validate",
+          "logisim.list_component_factories", "logisim.describe_component", "logisim.add_component", "logisim.update_component",
+          "logisim.set_attribute", "logisim.move_component", "logisim.remove_component", "logisim.connect", "logisim.disconnect",
+          "logisim.undo", "logisim.redo", "logisim.set_input", "logisim.simulate", "logisim.clock_step", "logisim.reset_simulation",
+          "logisim.run_vectors", "logisim.export_circuit_image", "logisim.export_state_sheet"
+        ]},
+        "params": {"$ref": "#/$defs/params"}
+      },
+      "allOf": [
+        {"if": {"properties": {"method": {"enum": ["logisim.open_project", "logisim.create_project", "logisim.export_circuit_image", "logisim.export_state_sheet"]}}},
+         "then": {"required": ["params"], "properties": {"params": {"required": ["path"]}}}},
+        {"if": {"properties": {"method": {"not": {"enum": ["logisim.get_capabilities", "logisim.open_project", "logisim.create_project", "logisim.list_component_factories", "logisim.describe_component"]}}}},
+         "then": {"required": ["params"], "properties": {"params": {"$ref": "#/$defs/project"}}}},
+        {"if": {"properties": {"method": {"enum": ["logisim.describe_component", "logisim.add_component"]}}},
+         "then": {"required": ["params"], "properties": {"params": {"required": ["factory"]}}}},
+        {"if": {"properties": {"method": {"enum": ["logisim.add_component", "logisim.move_component"]}}},
+         "then": {"properties": {"params": {"$ref": "#/$defs/point"}}}},
+        {"if": {"properties": {"method": {"enum": ["logisim.move_component", "logisim.update_component", "logisim.remove_component", "logisim.set_attribute"]}}},
+         "then": {"properties": {"params": {"required": ["id"]}}}},
+        {"if": {"properties": {"method": {"const": "logisim.create_circuit"}}},
+         "then": {"properties": {"params": {"required": ["name"]}}}},
+        {"if": {"properties": {"method": {"const": "logisim.set_attribute"}}},
+         "then": {"properties": {"params": {"required": ["attribute", "value"]}}}},
+        {"if": {"properties": {"method": {"const": "logisim.connect"}}},
+         "then": {"properties": {"params": {"required": ["points"]}}}},
+        {"if": {"properties": {"method": {"const": "logisim.disconnect"}}},
+         "then": {"properties": {"params": {"anyOf": [{"required": ["wire_or_net_id"]}, {"required": ["id"]}]}}}},
+        {"if": {"properties": {"method": {"const": "logisim.set_input"}}},
+         "then": {"properties": {"params": {"required": ["pin_id", "value"], "properties": {"value": {"$ref": "#/$defs/value"}}}}}},
+        {"if": {"properties": {"method": {"const": "logisim.run_vectors"}}},
+         "then": {"properties": {"params": {"required": ["vectors"]}}}},
+        {"if": {"properties": {"method": {"const": "logisim.export_state_sheet"}}},
+         "then": {"properties": {"params": {"required": ["states"]}}}}
+      ]
+    },
+    "response": {
+      "type": "object", "required": ["jsonrpc", "id"],
+      "oneOf": [{"required": ["result"]}, {"required": ["error"]}],
+      "properties": {
+        "jsonrpc": {"const": "2.0"}, "id": {"$ref": "#/$defs/id"}, "result": {},
+        "error": {"type": "object", "required": ["code", "message", "details", "recoverable", "data"],
+                  "properties": {"code": {"type": "integer"}, "message": {"type": "string"}, "details": {"type": "object"},
+                                 "recoverable": {"type": "boolean"}, "data": {"type": "object", "required": ["details", "recoverable"]}}}
+      }
+    }
+  }
+}
