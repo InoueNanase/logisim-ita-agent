@@ -1,0 +1,4 @@
+[
+  {"label":"Select I0 (0101)","inputs":{"I0":5,"I1":10,"SEL":0},"expect":{"Q0":1,"Q1":0,"Q2":1,"Q3":0}},
+  {"label":"Select I1 (1010)","inputs":{"I0":5,"I1":10,"SEL":1},"expect":{"Q0":0,"Q1":1,"Q2":0,"Q3":1}}
+]

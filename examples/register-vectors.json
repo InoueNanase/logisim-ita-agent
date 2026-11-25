@@ -1,0 +1,6 @@
+[
+  {"label":"Initial · D=5, CLK=0","inputs":{"D":5},"expect":{"Q":0}},
+  {"label":"Rising edge · capture 5","edges":1,"expect":{"Q":5}},
+  {"label":"Falling edge · hold 5","inputs":{"D":10},"edges":1,"expect":{"Q":5}},
+  {"label":"Rising edge · capture 10","edges":1,"expect":{"Q":10}}
+]
