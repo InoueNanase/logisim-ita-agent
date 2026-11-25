@@ -1,0 +1,10 @@
+/work/
+/upstream/
+/outputs/
+/CS220-Lab/
+/practical*.circ
+*.docx
+*.pdf
+*.xlsx
+__pycache__/
+*.pyc
